@@ -244,6 +244,7 @@
             font-weight: bold;
             text-transform: uppercase;
             letter-spacing: 1px;
+            cursor: pointer;
         }
 
         @keyframes marquee {
@@ -293,7 +294,6 @@
             }
         }
 
-        /* 3D Text Animation */
         .text-3d {
             font-size: 1.5rem;
             text-align: center;
@@ -325,7 +325,6 @@
             100% { color: #ff1493; }
         }
 
-        /* Loading spinner */
         .loader {
             display: none;
             border: 5px solid #f3f3f3;
@@ -351,7 +350,7 @@
         </header>
 
         <div class="total-summary">
-            <h2>စုစုပေါင်း အသုံးပြုမှု</h2>
+            <h2>စုစုပေါင်း အသုံးပြုမှု့</h2>
             <div class="total-amount" id="total-amount">Loading...</div>
             <p>Total Usage in MMK</p>
         </div>
@@ -383,6 +382,25 @@
             </div>
         </div>
 
+        <h2 class="section-title">Admin အလိုက် ပေးချေရမည့်စာရင်း</h2>
+        <div class="card">
+            <div class="loader" id="admin-usage-loader"></div>
+            <div class="table-responsive">
+                <table id="admin-usage-table">
+                    <thead>
+                        <tr>
+                            <th>Admin အမည်</th>
+                            <th>ပေးချေရမည့်(MMK)</th>
+                            <th>meno</th>
+                        </tr>
+                    </thead>
+                    <tbody id="admin-usage-data">
+                        <!-- Data will be loaded here -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <div class="marquee">
             <div class="text-3d marquee-content" id="animated-text">https://trendifymm.com - The Best Platform in Myanmar</div>
         </div>
@@ -393,6 +411,7 @@
             // Show loaders
             document.getElementById('usage-loader').style.display = 'block';
             document.getElementById('team-loader').style.display = 'block';
+            document.getElementById('admin-usage-loader').style.display = 'block';
 
             // Fetch data from API 2 (Usage data)
             fetch('https://script.google.com/macros/s/AKfycbwJen__jUQPlAB1wqjigVIJ5bpORzRcPjYgBlf7fDLBbIYaQQd3hRrUpRBFh049kJFuzQ/exec')
@@ -432,6 +451,49 @@
                         
                         tbody.appendChild(row);
                     });
+
+                    return totalMMK;
+                })
+                .then(totalMMK => {
+                    // Fetch data from API 1 (Team data) to calculate admin usage
+                    fetch('https://script.google.com/macros/s/AKfycbxMsxL_u-AjIbGXLsSILusDpgpoEyrCeOOWBFSrzYNnqanJ07v7Te9H6qyQnLlnKzdX/exec')
+                        .then(response => response.json())
+                        .then(teamData => {
+                            // Hide loader
+                            document.getElementById('admin-usage-loader').style.display = 'none';
+
+                            // Calculate per admin amount
+                            const adminCount = teamData.length;
+                            const perAdminAmount = totalMMK / adminCount;
+
+                            // Populate admin usage table
+                            const adminTbody = document.getElementById('admin-usage-data');
+                            adminTbody.innerHTML = '';
+                            
+                            teamData.forEach(member => {
+                                const row = document.createElement('tr');
+                                
+                                const nameCell = document.createElement('td');
+                                nameCell.textContent = member.Name || 'N/A';
+                                
+                                const amountCell = document.createElement('td');
+                                amountCell.textContent = perAdminAmount.toLocaleString() + ' MMK';
+                                
+                                const menoCell = document.createElement('td');
+                                menoCell.textContent = member.meno || 'N/A'; // Changed from member.Note to member.meno
+                                
+                                row.appendChild(nameCell);
+                                row.appendChild(amountCell);
+                                row.appendChild(menoCell);
+                                
+                                adminTbody.appendChild(row);
+                            });
+                        })
+                        .catch(error => {
+                            console.error('Error fetching team data for admin usage:', error);
+                            document.getElementById('admin-usage-loader').style.display = 'none';
+                            document.getElementById('admin-usage-data').innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--danger);">Error loading admin usage data. Please try again later.</td></tr>';
+                        });
                 })
                 .catch(error => {
                     console.error('Error fetching usage data:', error);
@@ -519,6 +581,11 @@
 
             // Change message every 5 seconds
             setInterval(changeMessage, 5000);
+
+            // Make animated text clickable
+            animatedText.addEventListener('click', function() {
+                window.location.href = 'https://trendifymm.com';
+            });
         });
     </script>
 </body>
